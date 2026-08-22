@@ -49,10 +49,14 @@ export const UserService = {
         .update({ name })
         .eq('id', userId)
         .select('id, name, phone, available, created_at')
-        .single();
+        .maybeSingle();
 
       if (updateError) {
         throw updateError;
+      }
+
+      if (!updated) {
+        throw new Error('Failed to update user profile');
       }
 
       return updated;
