@@ -42,9 +42,20 @@ export const UserService = {
       throw checkError;
     }
 
-    // If user exists, return existing profile
+    // If user exists, update their name and return
     if (existing) {
-      return existing;
+      const { data: updated, error: updateError } = await supabase
+        .from('users')
+        .update({ name })
+        .eq('id', userId)
+        .select('id, name, phone, available, created_at')
+        .single();
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      return updated;
     }
 
     // Otherwise, create new user
