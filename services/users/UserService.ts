@@ -27,6 +27,27 @@ export const UserService = {
     userId: string,
     name: string
   ): Promise<UserProfile> {
+    /*
+     * Check if user already exists.
+     * This can happen when switching test users or
+     * if onboarding is retried after a previous success.
+     */
+    const { data: existing, error: checkError } = await supabase
+      .from('users')
+      .select('id, name, phone, available, created_at')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (checkError) {
+      throw checkError;
+    }
+
+    // If user exists, return existing profile
+    if (existing) {
+      return existing;
+    }
+
+    // Otherwise, create new user
     const { data, error } = await supabase
       .from('users')
       .insert({
