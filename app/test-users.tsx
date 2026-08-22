@@ -37,6 +37,9 @@ export default function TestUsersScreen() {
   const [creating, setCreating] =
     useState(false);
 
+  const [switching, setSwitching] =
+    useState(false);
+
   useEffect(() => {
     loadTestUsers();
   }, []);
@@ -194,7 +197,7 @@ export default function TestUsersScreen() {
     user: TestUser
   ) {
     try {
-      setLoading(true);
+      setSwitching(true);
 
       const {
         error,
@@ -238,8 +241,16 @@ export default function TestUsersScreen() {
           'Profile missing',
           `${user.label} does not have a profile yet.`
         );
+        setSwitching(false);
         return;
       }
+
+      /*
+       * Wait a moment for AuthContext to process
+       * the session change before navigating.
+       * This ensures FriendContext sees the new user.
+       */
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       router.replace(
         '/(tabs)'
@@ -255,7 +266,7 @@ export default function TestUsersScreen() {
         'This test user`s session may have expired. Create a new test user if necessary.'
       );
     } finally {
-      setLoading(false);
+      setSwitching(false);
     }
   }
 
@@ -328,19 +339,19 @@ export default function TestUsersScreen() {
         placeholder="Test user name"
         placeholderTextColor="#77747A"
         autoCapitalize="words"
-        editable={!creating}
+        editable={!creating && !switching}
       />
 
       <Pressable
         style={[
           styles.createButton,
-          creating &&
+          (creating || switching) &&
             styles.buttonDisabled,
         ]}
         onPress={
           createTestUser
         }
-        disabled={creating}
+        disabled={creating || switching}
       >
         <Text
           style={
@@ -383,6 +394,7 @@ export default function TestUsersScreen() {
                     user
                   )
                 }
+                disabled={switching}
               >
                 <Text
                   style={
@@ -405,7 +417,7 @@ export default function TestUsersScreen() {
                     styles.switchText
                   }
                 >
-                  Tap to switch
+                  {switching ? 'Switching...' : 'Tap to switch'}
                 </Text>
               </Pressable>
 
@@ -418,6 +430,7 @@ export default function TestUsersScreen() {
                     user
                   )
                 }
+                disabled={switching}
               >
                 <Text
                   style={
